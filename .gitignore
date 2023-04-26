@@ -1,3 +1,4 @@
+# src/Stella/*
 *.bak
 build/
 *.o

@@ -13,6 +13,8 @@ set (Stella_Syntax
   src/Stella/Buffer.C
   src/Stella/Bison.H
   src/Stella/Lexer.C
+  src/Stella/Skeleton.H
+  src/Stella/Skeleton.C
 )
 
 set (SRCS
@@ -21,8 +23,8 @@ set (SRCS
   src/Eval.cpp
   src/TypeCheck.h
   src/TypeCheck.cpp
-  src/VisitTypeCheck.h
-  src/VisitTypeCheck.cpp
+  # src/VisitTypeCheck.h
+  # src/VisitTypeCheck.cpp
 )
 
 add_executable(stella-interpreter ${Stella_Syntax} ${SRCS})
