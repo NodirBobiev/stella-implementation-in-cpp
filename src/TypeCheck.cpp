@@ -4,6 +4,7 @@
 #include <map>
 #include <unordered_map>
 #include <algorithm>
+#include <set>
 #include "TypeCheck.h"
 #include <unistd.h>
 #include "Stella/Skeleton.H"
@@ -14,6 +15,57 @@ using namespace std;
 namespace Stella
 {
     string toString(Type *type);
+    bool typecheck(Type *t1, Type *t2);
+
+    class TypeError: public exception
+    {
+        private:
+            string msg;
+        public:
+            TypeError(Type* e_type, Type* a_type, int r, int c)
+                :msg(
+                    "TypeError (" + to_string(r) + ", " + to_string(c) + "): " + 
+                    "Expected " + toString(e_type) + " type but got " + toString(a_type) + " type."
+                ){}
+            TypeError(string e_type, string a_type, int r, int c)
+                :msg(
+                    "TypeError (" + to_string(r) + ", " + to_string(c) + "): " + 
+                    "Expected " + e_type + " type but got " + a_type + " type."
+                ){}
+            TypeError(string text, int r, int c)
+                :msg(
+                    "TypeError (" + to_string(r) + ", " + to_string(c) + "): " + text
+                ){}
+            const char* what() const noexcept override{return msg.c_str();}
+    };
+
+    class UndefinedError: public exception
+    {
+        private:
+            string msg;
+        public:
+            UndefinedError(string text, int r, int c)
+                :msg(
+                    "UndefinedError (" + to_string(r) + ", " + to_string(c) + "): " + text
+                ){}
+            const char* what() const noexcept override{return msg.c_str();}
+    };
+
+    Type* getFieldType(TypeRecord *type_record, StellaIdent ident){
+        ARecordFieldType *result = nullptr;
+        for(auto field: *(type_record->listrecordfieldtype_)){
+            if( auto a_field = dynamic_cast<ARecordFieldType *>(field) ){
+                if( a_field->stellaident_ == ident ){
+                    if( result != nullptr )
+                        throw TypeError(ident + " is ambiguous in " + toString(type_record), type_record->line_number, type_record->char_number);
+                    result = a_field;
+                }
+            }
+        }
+        if( result == nullptr)
+            return nullptr;
+        return result->type_;
+    }
 
     string toString(RecordFieldType *record_field_type){
         if(auto a_record_field_type = dynamic_cast<ARecordFieldType *>(record_field_type))
@@ -39,8 +91,7 @@ namespace Stella
         return result;
     }
 
-    string toString(Type *type)
-    {
+    string toString(Type *type){
         static long long nullCounter = 0;
         if (type == nullptr)
             return "NULL<" + to_string(nullCounter++) + ">";
@@ -72,8 +123,7 @@ namespace Stella
         throw invalid_argument("Type is not implemented");
     }
 
-    TypeFun *extractType(DeclFun *decl_fun)
-    {
+    TypeFun *extractType(DeclFun *decl_fun){
         auto list_param_decl = decl_fun->listparamdecl_;
         auto return_type = decl_fun->returntype_;
         auto list_type = new ListType();
@@ -87,12 +137,29 @@ namespace Stella
         return new TypeFun(list_type, type);
     }
 
+    bool typecheck(TypeRecord *t1, TypeRecord *t2){
+        cout << "typecheck: " << toString(t1) << " vs " << toString(t2) << endl; 
+        for(auto field1: (*t1->listrecordfieldtype_)){
+            bool found = false;
+            int cnt = 0;
+            for(auto field2: (*t2->listrecordfieldtype_)){
+                auto a_field1 = dynamic_cast<ARecordFieldType *>(field1);
+                auto a_field2 = dynamic_cast<ARecordFieldType *>(field2);
+                cout << "sub typecheck: " << toString(a_field1) << " vs " << toString(a_field2) << endl;
+                if( a_field1->stellaident_ == a_field2->stellaident_ && typecheck(a_field1->type_, a_field2->type_))
+                    found = true;
+            }
+            if(!found) return false;
+        }
+        return true;
+    }
+
     bool typecheck(Type *type1, Type *type2)
     {
         auto type_record1 = dynamic_cast<TypeRecord *>(type1);
         auto type_record2 = dynamic_cast<TypeRecord *>(type2);
         if(type_record1 != nullptr && type_record2 != nullptr){
-            
+            return typecheck(type_record1, type_record2);
         }
         return toString(type1) == toString(type2);
     }
@@ -114,41 +181,7 @@ namespace Stella
         return putTab(depth) + colorize(text, depth);
     }
 
-    class TypeError: public exception
-    {
-        private:
-            string msg;
-        public:
-            TypeError(Type* e_type, Type* a_type, int r, int c)
-                :msg(
-                    "TypeError (" + to_string(r) + ", " + to_string(c) + "): " + 
-                    "Expected " + toString(e_type) + " type but got " + toString(a_type) + " type."
-                ){}
-            TypeError(string e_type, string a_type, int r, int c)
-                :msg(
-                    "TypeError (" + to_string(r) + ", " + to_string(c) + "): " + 
-                    "Expected " + e_type + " type but got " + a_type + " type."
-                ){}
-            TypeError(string text, int r, int c)
-                :msg(
-                    "TypeError (" + to_string(r) + ", " + to_string(c) + "): " + text
-                ){}
-            const char* what() const noexcept override{return msg.c_str();}
-    };
-
-
-    class UndefinedError: public exception
-    {
-        private:
-            string msg;
-        public:
-            UndefinedError(string text, int r, int c)
-                :msg(
-                    "UndefinedError (" + to_string(r) + ", " + to_string(c) + "): " + text
-                ){}
-            const char* what() const noexcept override{return msg.c_str();}
-    };
-
+    
 
     class VisitTypeCheck : public Skeleton
     {
@@ -214,23 +247,6 @@ namespace Stella
             match_type = old_match_type; 
         }
 
-        Type* getFieldType(TypeRecord *type_record, StellaIdent ident)
-        {
-            ARecordFieldType *result = nullptr;
-            for(auto field: *(type_record->listrecordfieldtype_)){
-                if( auto a_field = dynamic_cast<ARecordFieldType *>(field) ){
-                    if( a_field->stellaident_ == ident ){
-                        if( result != nullptr )
-                            throw TypeError(ident + " is ambiguous in " + toString(type_record), type_record->line_number, type_record->char_number);
-                        result = a_field;
-                    }
-                }
-            }
-            if( result == nullptr)
-                throw UndefinedError(ident + " was not found in " + toString(type_record), type_record->line_number, type_record->char_number);
-            return result->type_;
-        }
-
         void visitABinding(ABinding *a_binding)
         {
             enterVisit();
@@ -261,6 +277,11 @@ namespace Stella
             logMessage("visitDotRecord; expected_type: " + toString(expected_type));
             auto expr_type = typecheck_subexpr(dot_record->expr_, nullptr);
             if( auto type_record = dynamic_cast<TypeRecord *>(expr_type)){
+                auto field_type = getFieldType(type_record, dot_record->stellaident_);
+                if( field_type == nullptr )
+                    throw UndefinedError(
+                        dot_record->stellaident_ + " was not found in " + toString(type_record), 
+                        type_record->line_number, type_record->char_number);
                 set_actual_type(dot_record, getFieldType(type_record, dot_record->stellaident_));
             }
             else{
@@ -736,6 +757,9 @@ extend with #sum-types;
 
 
 
+{a : {x : Nat} }
+
+{ a: {x : Nat, y : Bool}, a : {z: Bool, x:Nat} }
 
 
 */
