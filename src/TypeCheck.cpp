@@ -138,14 +138,14 @@ namespace Stella
     }
 
     bool typecheck(TypeRecord *t1, TypeRecord *t2){
-        cout << "typecheck: " << toString(t1) << " vs " << toString(t2) << endl; 
+        // cout << "typecheck: " << toString(t1) << " vs " << toString(t2) << endl; 
         for(auto field1: (*t1->listrecordfieldtype_)){
             bool found = false;
             int cnt = 0;
             for(auto field2: (*t2->listrecordfieldtype_)){
                 auto a_field1 = dynamic_cast<ARecordFieldType *>(field1);
                 auto a_field2 = dynamic_cast<ARecordFieldType *>(field2);
-                cout << "sub typecheck: " << toString(a_field1) << " vs " << toString(a_field2) << endl;
+                // cout << "sub typecheck: " << toString(a_field1) << " vs " << toString(a_field2) << endl;
                 if( a_field1->stellaident_ == a_field2->stellaident_ && typecheck(a_field1->type_, a_field2->type_))
                     found = true;
             }
@@ -201,7 +201,7 @@ namespace Stella
 
         void logMessage(string text)
         {
-            cout << beautify(text, this->visitDepth) << endl;
+            // cout << beautify(text, this->visitDepth) << endl;
             message_outputs += beautify(text, this->visitDepth) + "\n";
         }
 
