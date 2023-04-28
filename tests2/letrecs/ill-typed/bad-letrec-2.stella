@@ -1,0 +1,7 @@
+language core;
+
+extend with #letrec-bindings;
+
+fn main(n : Nat) -> Nat {
+  return letrec bad = false in letrec good = true in if good then bad else succ(bad);
+}

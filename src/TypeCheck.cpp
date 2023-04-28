@@ -2,9 +2,10 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <cassert>
 #include <unordered_map>
+#include <algorithm>
 #include "TypeCheck.h"
+#include <unistd.h>
 #include "Stella/Skeleton.H"
 #include "Stella/Absyn.H"
 
@@ -14,10 +15,27 @@ namespace Stella
 {
     string toString(Type *type);
 
+    string toString(RecordFieldType *record_field_type){
+        if(auto a_record_field_type = dynamic_cast<ARecordFieldType *>(record_field_type))
+            return a_record_field_type->stellaident_ + ":" + toString(a_record_field_type->type_);
+        throw runtime_error("RecordFieldType is not implemented");
+    }
+    
+    bool compareRecordFieldType(RecordFieldType *p1, RecordFieldType *p2){
+        return toString(p1) < toString(p2);
+    }
+
     string toString(ListType *list_type){
         string result = "";
         for (ListType::iterator it = list_type->begin(); it != list_type->end(); it++)
             result +=  (it == list_type->begin() ? "" : ",") + toString(*it);
+        return result;
+    }
+
+    string toString(ListRecordFieldType *list){
+        string result = "";
+        for (ListRecordFieldType::iterator it = list->begin(); it != list->end(); it++)
+            result +=  (it == list->begin() ? "" : ",") + toString(*it);
         return result;
     }
 
@@ -48,6 +66,9 @@ namespace Stella
         if (auto type_sum = dynamic_cast<TypeSum *>(type))
             return "(" + toString(type_sum->type_1) + "+" + toString(type_sum->type_2) + ")";
 
+        if (auto type_record = dynamic_cast<TypeRecord *>(type)){
+            return "{" + toString(type_record->listrecordfieldtype_) + "}";
+        }
         throw invalid_argument("Type is not implemented");
     }
 
@@ -68,6 +89,11 @@ namespace Stella
 
     bool typecheck(Type *type1, Type *type2)
     {
+        auto type_record1 = dynamic_cast<TypeRecord *>(type1);
+        auto type_record2 = dynamic_cast<TypeRecord *>(type2);
+        if(type_record1 != nullptr && type_record2 != nullptr){
+            
+        }
         return toString(type1) == toString(type2);
     }
 
@@ -116,10 +142,9 @@ namespace Stella
         private:
             string msg;
         public:
-            UndefinedError(string var_name, int r, int c)
+            UndefinedError(string text, int r, int c)
                 :msg(
-                    "UndefinedError (" + to_string(r) + ", " + to_string(c) + "): " + 
-                    var_name + " is not defined in this scope."
+                    "UndefinedError (" + to_string(r) + ", " + to_string(c) + "): " + text
                 ){}
             const char* what() const noexcept override{return msg.c_str();}
     };
@@ -135,10 +160,11 @@ namespace Stella
         Type *expected_type = nullptr;
         Type *actual_type = nullptr;
         Type *match_type = nullptr;
+        ARecordFieldType * a_record_field_type = nullptr;
         int visitDepth = 0;
 
-        void enterVisit() { this->visitDepth++; }
-        void exitVisit() { this->visitDepth--; }
+        void enterVisit() { this->visitDepth++;}
+        void exitVisit() { this->visitDepth--;}
 
         void logMessage(string text)
         {
@@ -188,23 +214,130 @@ namespace Stella
             match_type = old_match_type; 
         }
 
-        // void visitDeref(Deref *deref)
-        // {
-        //   enterVisit();
-        //   logMessage("visitDeref; expected_type: " + toString(expected_type));
-        //   auto expr_type = typecheck_subexpr(deref->expr_, nullptr);
-        //   if(auto type_ref = dynamic_cast<TypeRef *>(expr_type)){
-        //     set_actual_type();
-        //   }
-        //   else{
-        //     TypeError()
-        //   }
+        Type* getFieldType(TypeRecord *type_record, StellaIdent ident)
+        {
+            ARecordFieldType *result = nullptr;
+            for(auto field: *(type_record->listrecordfieldtype_)){
+                if( auto a_field = dynamic_cast<ARecordFieldType *>(field) ){
+                    if( a_field->stellaident_ == ident ){
+                        if( result != nullptr )
+                            throw TypeError(ident + " is ambiguous in " + toString(type_record), type_record->line_number, type_record->char_number);
+                        result = a_field;
+                    }
+                }
+            }
+            if( result == nullptr)
+                throw UndefinedError(ident + " was not found in " + toString(type_record), type_record->line_number, type_record->char_number);
+            return result->type_;
+        }
 
+        void visitABinding(ABinding *a_binding)
+        {
+            enterVisit();
+            logMessage("visitABinding; expected_type: " + toString(expected_type));
+            auto expr_type = typecheck_subexpr(a_binding->expr_, nullptr);
+            a_record_field_type = new ARecordFieldType(a_binding->stellaident_, expr_type);
+            logMessage("ABinding type: " + toString(a_record_field_type));
+            exitVisit();
+        }
 
+        void visitRecord(Record *record)
+        {
+            enterVisit();
+            logMessage("visitRecord; expected_type: " + toString(expected_type));
+            auto fields = new ListRecordFieldType();
+            for(auto binding: *(record->listbinding_)){
+                binding->accept(this);
+                fields->push_back(a_record_field_type);
+                a_record_field_type = nullptr;
+            }
+            set_actual_type(record, new TypeRecord(fields));
+            exitVisit();
+        }
 
+        void visitDotRecord(DotRecord *dot_record)
+        {
+            enterVisit();
+            logMessage("visitDotRecord; expected_type: " + toString(expected_type));
+            auto expr_type = typecheck_subexpr(dot_record->expr_, nullptr);
+            if( auto type_record = dynamic_cast<TypeRecord *>(expr_type)){
+                set_actual_type(dot_record, getFieldType(type_record, dot_record->stellaident_));
+            }
+            else{
+                throw TypeError("Expected TypeRecord but got " + toString(expr_type), dot_record->line_number, dot_record->char_number);
+            }
+            exitVisit();
+        }
 
-        //   exitVisit();
-        // }
+        void visitEqual(Equal *equal)
+        {
+            enterVisit();
+            logMessage("visitEqual; exptected_type: " + toString(expected_type));
+            auto expr1_type = typecheck_subexpr(equal->expr_1, nullptr);
+            auto expr2_type = typecheck_subexpr(equal->expr_2, nullptr);
+            if(!typecheck(expr1_type, expr2_type)){
+                throw TypeError("Incompatible equality of " + toString(expr1_type) + " with " + toString(expr2_type), 
+                    equal->line_number, equal->char_number);
+            }
+            set_actual_type(equal, new TypeBool());
+            exitVisit();
+        }
+
+        void visitPanic(Panic *panic)
+        {
+            enterVisit();
+            logMessage("visitPanic; expected_type: " + toString(expected_type));
+            if( expected_type == nullptr)
+                throw TypeError("Unknown expected type", panic->line_number, panic->char_number);
+            set_actual_type(panic, expected_type);
+            exitVisit();
+        }
+
+        void visitRef(Ref *ref)
+        {
+            enterVisit();
+            logMessage("visitRef; expected_type: " + toString(expected_type));
+            auto expr_type = typecheck_subexpr(ref->expr_, nullptr);
+            set_actual_type(ref, new TypeRef(expr_type));
+            exitVisit();
+        }
+
+        void visitAssign(Assign *assign)
+        {
+            enterVisit();
+            logMessage("visitAssign; expected_type: " + toString(expected_type));
+            auto expr1_type = typecheck_subexpr(assign->expr_1, nullptr);
+            logMessage("+-------------------------");
+            if(auto type_ref = dynamic_cast<TypeRef*>(expr1_type)){
+                typecheck_subexpr(assign->expr_2, type_ref->type_);
+            }
+            else{
+                auto expr2_type = typecheck_subexpr(assign->expr_2, nullptr);
+                throw TypeError(new TypeRef(expr2_type), expr1_type, assign->line_number, assign->char_number);
+            }
+            set_actual_type(assign, new TypeUnit());
+            exitVisit();
+        }
+
+        void visitDeref(Deref *deref)
+        {
+            enterVisit();
+            logMessage("visitDeref; expected_type: " + toString(expected_type));
+            Type* expr_type = nullptr;
+            if(expected_type == nullptr)
+                expr_type = typecheck_subexpr(deref->expr_, nullptr);
+            else
+                expr_type = typecheck_subexpr(deref->expr_, new TypeRef(expected_type));
+            
+            if(auto type_ref = dynamic_cast<TypeRef *>(expr_type)){
+                set_actual_type(deref, type_ref->type_);
+            }
+            else{
+                throw TypeError("Expected TypeRef but got " + toString(expr_type) + "type", 
+                deref->line_number, deref->char_number);
+            }
+            exitVisit();
+        }
 
         void visitSequence(Sequence *sequence)
         {
@@ -283,10 +416,14 @@ namespace Stella
         void visitVar(Var *var)
         {
             enterVisit();
-            logMessage("visitVar: " + var->stellaident_ + "; expected_type: " + toString(expected_type));
-            if(context.find(var->stellaident_) == context.end())
-                throw UndefinedError(var->stellaident_, var->line_number, var->char_number);
-            set_actual_type(var, context[var->stellaident_]);
+            Type* var_type = nullptr;
+            if(context.find(var->stellaident_) != context.end())
+                var_type = context[var->stellaident_];
+
+            logMessage("visitVar: " + var->stellaident_ + " : " + toString(var_type) + "; expected_type: " + toString(expected_type));
+            if(var_type == nullptr)
+                throw UndefinedError(var->stellaident_ + " is not defined in this scope", var->line_number, var->char_number);
+            set_actual_type(var, var_type);
             exitVisit();
         }
 

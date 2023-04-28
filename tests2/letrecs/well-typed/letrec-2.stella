@@ -1,0 +1,7 @@
+language core;
+
+extend with #letrec-bindings;
+
+fn main(n : Nat) -> Nat {
+  return letrec one = succ(0) in letrec two = succ(one) in succ(two);
+}

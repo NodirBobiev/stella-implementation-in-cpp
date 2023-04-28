@@ -1,0 +1,10 @@
+language core;
+extend with #tuples;
+
+fn tuple_tuples(p : {Nat, Nat, Nat, Nat}) -> {{Nat, Nat}, {Nat, Nat}} {
+  return {{p.1, p.2}, {p.3, p.4}}
+}
+
+fn main(x : Nat) -> {{Nat, Nat}, {Nat, Nat}} {
+  return tuple_tuples({x, succ(x), succ(succ(x)), succ(succ(succ(x)))})
+}
