@@ -45,15 +45,15 @@ IDENT [a-zA-Z0-9'_]
 <INITIAL>")"      	 return _RPAREN;
 <INITIAL>"{"      	 return _LBRACE;
 <INITIAL>"}"      	 return _RBRACE;
+<INITIAL>"["      	 return _LBRACK;
+<INITIAL>"]"      	 return _RBRACK;
 <INITIAL>"="      	 return _EQ;
 <INITIAL>":"      	 return _COLON;
 <INITIAL>"->"      	 return _RARROW;
 <INITIAL>"=>"      	 return _RDARROW;
 <INITIAL>"|"      	 return _BAR;
-<INITIAL>"<|"      	 return _SYMB_11;
-<INITIAL>"|>"      	 return _SYMB_12;
-<INITIAL>"["      	 return _LBRACK;
-<INITIAL>"]"      	 return _RBRACK;
+<INITIAL>"<|"      	 return _SYMB_13;
+<INITIAL>"|>"      	 return _SYMB_14;
 <INITIAL>":="      	 return _COLONEQ;
 <INITIAL>"<"      	 return _LT;
 <INITIAL>"<="      	 return _LDARROW;
@@ -92,6 +92,8 @@ IDENT [a-zA-Z0-9'_]
 <INITIAL>"fix"      	 return _KW_fix;
 <INITIAL>"fn"      	 return _KW_fn;
 <INITIAL>"fold"      	 return _KW_fold;
+<INITIAL>"forall"      	 return _KW_forall;
+<INITIAL>"generic"      	 return _KW_generic;
 <INITIAL>"if"      	 return _KW_if;
 <INITIAL>"in"      	 return _KW_in;
 <INITIAL>"inl"      	 return _KW_inl;
@@ -116,7 +118,7 @@ IDENT [a-zA-Z0-9'_]
 <INITIAL>"unit"      	 return _KW_unit;
 <INITIAL>"variant"      	 return _KW_variant;
 <INITIAL>"with"      	 return _KW_with;
-<INITIAL>"µ"      	 return _KW_77;
+<INITIAL>"µ"      	 return _KW_79;
 
 <INITIAL>"//"[^\n]* /* skip */; /* BNFC: comment "//" */
 <INITIAL>"/*" BEGIN COMMENT;

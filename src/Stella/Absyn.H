@@ -51,6 +51,7 @@ class AProgram;
 class LanguageCore;
 class AnExtension;
 class DeclFun;
+class DeclFunGeneric;
 class DeclTypeAlias;
 class DeclExceptionType;
 class DeclExceptionVariant;
@@ -88,6 +89,7 @@ class Assign;
 class If;
 class Let;
 class LetRec;
+class TypeAbstraction;
 class APatternBinding;
 class LessThan;
 class LessThanOrEqual;
@@ -110,6 +112,7 @@ class LogicAnd;
 class Ref;
 class Deref;
 class Application;
+class TypeApplication;
 class DotRecord;
 class DotTuple;
 class Tuple;
@@ -139,6 +142,7 @@ class ConstInt;
 class ConstMemory;
 class Var;
 class TypeFun;
+class TypeForAll;
 class TypeRec;
 class TypeSum;
 class TypeTuple;
@@ -204,6 +208,7 @@ public:
   virtual void visitLanguageCore(LanguageCore *p) = 0;
   virtual void visitAnExtension(AnExtension *p) = 0;
   virtual void visitDeclFun(DeclFun *p) = 0;
+  virtual void visitDeclFunGeneric(DeclFunGeneric *p) = 0;
   virtual void visitDeclTypeAlias(DeclTypeAlias *p) = 0;
   virtual void visitDeclExceptionType(DeclExceptionType *p) = 0;
   virtual void visitDeclExceptionVariant(DeclExceptionVariant *p) = 0;
@@ -241,6 +246,7 @@ public:
   virtual void visitIf(If *p) = 0;
   virtual void visitLet(Let *p) = 0;
   virtual void visitLetRec(LetRec *p) = 0;
+  virtual void visitTypeAbstraction(TypeAbstraction *p) = 0;
   virtual void visitAPatternBinding(APatternBinding *p) = 0;
   virtual void visitLessThan(LessThan *p) = 0;
   virtual void visitLessThanOrEqual(LessThanOrEqual *p) = 0;
@@ -263,6 +269,7 @@ public:
   virtual void visitRef(Ref *p) = 0;
   virtual void visitDeref(Deref *p) = 0;
   virtual void visitApplication(Application *p) = 0;
+  virtual void visitTypeApplication(TypeApplication *p) = 0;
   virtual void visitDotRecord(DotRecord *p) = 0;
   virtual void visitDotTuple(DotTuple *p) = 0;
   virtual void visitTuple(Tuple *p) = 0;
@@ -292,6 +299,7 @@ public:
   virtual void visitConstMemory(ConstMemory *p) = 0;
   virtual void visitVar(Var *p) = 0;
   virtual void visitTypeFun(TypeFun *p) = 0;
+  virtual void visitTypeForAll(TypeForAll *p) = 0;
   virtual void visitTypeRec(TypeRec *p) = 0;
   virtual void visitTypeSum(TypeSum *p) = 0;
   virtual void visitTypeTuple(TypeTuple *p) = 0;
@@ -567,6 +575,27 @@ public:
   void swap(DeclFun &);
 };
 
+class DeclFunGeneric : public Decl
+{
+public:
+  ListAnnotation *listannotation_;
+  StellaIdent stellaident_;
+  ListStellaIdent *liststellaident_;
+  ListParamDecl *listparamdecl_;
+  ReturnType *returntype_;
+  ThrowType *throwtype_;
+  ListDecl *listdecl_;
+  Expr *expr_;
+
+  DeclFunGeneric(const DeclFunGeneric &);
+  DeclFunGeneric &operator=(const DeclFunGeneric &);
+  DeclFunGeneric(ListAnnotation *p1, StellaIdent p2, ListStellaIdent *p3, ListParamDecl *p4, ReturnType *p5, ThrowType *p6, ListDecl *p7, Expr *p8);
+  ~DeclFunGeneric();
+  virtual void accept(Visitor *v);
+  virtual DeclFunGeneric *clone() const;
+  void swap(DeclFunGeneric &);
+};
+
 class DeclTypeAlias : public Decl
 {
 public:
@@ -720,6 +749,21 @@ public:
   virtual void accept(Visitor *v);
   virtual TypeFun *clone() const;
   void swap(TypeFun &);
+};
+
+class TypeForAll : public Type
+{
+public:
+  ListStellaIdent *liststellaident_;
+  Type *type_;
+
+  TypeForAll(const TypeForAll &);
+  TypeForAll &operator=(const TypeForAll &);
+  TypeForAll(ListStellaIdent *p1, Type *p2);
+  ~TypeForAll();
+  virtual void accept(Visitor *v);
+  virtual TypeForAll *clone() const;
+  void swap(TypeForAll &);
 };
 
 class TypeRec : public Type
@@ -1284,6 +1328,21 @@ public:
   void swap(LetRec &);
 };
 
+class TypeAbstraction : public Expr
+{
+public:
+  ListStellaIdent *liststellaident_;
+  Expr *expr_;
+
+  TypeAbstraction(const TypeAbstraction &);
+  TypeAbstraction &operator=(const TypeAbstraction &);
+  TypeAbstraction(ListStellaIdent *p1, Expr *p2);
+  ~TypeAbstraction();
+  virtual void accept(Visitor *v);
+  virtual TypeAbstraction *clone() const;
+  void swap(TypeAbstraction &);
+};
+
 class LessThan : public Expr
 {
 public:
@@ -1594,6 +1653,21 @@ public:
   virtual void accept(Visitor *v);
   virtual Application *clone() const;
   void swap(Application &);
+};
+
+class TypeApplication : public Expr
+{
+public:
+  Expr *expr_;
+  ListType *listtype_;
+
+  TypeApplication(const TypeApplication &);
+  TypeApplication &operator=(const TypeApplication &);
+  TypeApplication(Expr *p1, ListType *p2);
+  ~TypeApplication();
+  virtual void accept(Visitor *v);
+  virtual TypeApplication *clone() const;
+  void swap(TypeApplication &);
 };
 
 class DotRecord : public Expr

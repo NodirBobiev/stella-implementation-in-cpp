@@ -50,6 +50,7 @@ class PrintAbsyn : public Visitor
   void iterListExtension(ListExtension::const_iterator i, ListExtension::const_iterator j);
   void visitDecl(Decl *p); /* abstract class */
   void visitDeclFun(DeclFun *p);
+  void visitDeclFunGeneric(DeclFunGeneric *p);
   void visitDeclTypeAlias(DeclTypeAlias *p);
   void visitDeclExceptionType(DeclExceptionType *p);
   void visitDeclExceptionVariant(DeclExceptionVariant *p);
@@ -75,6 +76,7 @@ class PrintAbsyn : public Visitor
   void visitSomeThrowType(SomeThrowType *p);
   void visitType(Type *p); /* abstract class */
   void visitTypeFun(TypeFun *p);
+  void visitTypeForAll(TypeForAll *p);
   void visitTypeRec(TypeRec *p);
   void visitTypeSum(TypeSum *p);
   void visitTypeTuple(TypeTuple *p);
@@ -131,6 +133,7 @@ class PrintAbsyn : public Visitor
   void visitSequence(Sequence *p);
   void visitLet(Let *p);
   void visitLetRec(LetRec *p);
+  void visitTypeAbstraction(TypeAbstraction *p);
   void visitAssign(Assign *p);
   void visitIf(If *p);
   void visitLessThan(LessThan *p);
@@ -154,6 +157,7 @@ class PrintAbsyn : public Visitor
   void visitRef(Ref *p);
   void visitDeref(Deref *p);
   void visitApplication(Application *p);
+  void visitTypeApplication(TypeApplication *p);
   void visitDotRecord(DotRecord *p);
   void visitDotTuple(DotTuple *p);
   void visitTuple(Tuple *p);
@@ -283,6 +287,7 @@ class ShowAbsyn : public Visitor
   void iterListExtension(ListExtension::const_iterator i, ListExtension::const_iterator j);
   void visitDecl(Decl *p); /* abstract class */
   void visitDeclFun(DeclFun *p);
+  void visitDeclFunGeneric(DeclFunGeneric *p);
   void visitDeclTypeAlias(DeclTypeAlias *p);
   void visitDeclExceptionType(DeclExceptionType *p);
   void visitDeclExceptionVariant(DeclExceptionVariant *p);
@@ -308,6 +313,7 @@ class ShowAbsyn : public Visitor
   void visitSomeThrowType(SomeThrowType *p);
   void visitType(Type *p); /* abstract class */
   void visitTypeFun(TypeFun *p);
+  void visitTypeForAll(TypeForAll *p);
   void visitTypeRec(TypeRec *p);
   void visitTypeSum(TypeSum *p);
   void visitTypeTuple(TypeTuple *p);
@@ -364,6 +370,7 @@ class ShowAbsyn : public Visitor
   void visitSequence(Sequence *p);
   void visitLet(Let *p);
   void visitLetRec(LetRec *p);
+  void visitTypeAbstraction(TypeAbstraction *p);
   void visitAssign(Assign *p);
   void visitIf(If *p);
   void visitLessThan(LessThan *p);
@@ -387,6 +394,7 @@ class ShowAbsyn : public Visitor
   void visitRef(Ref *p);
   void visitDeref(Deref *p);
   void visitApplication(Application *p);
+  void visitTypeApplication(TypeApplication *p);
   void visitDotRecord(DotRecord *p);
   void visitDotTuple(DotTuple *p);
   void visitTuple(Tuple *p);

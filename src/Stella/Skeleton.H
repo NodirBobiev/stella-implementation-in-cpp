@@ -37,6 +37,7 @@ public:
   void visitLanguageCore(LanguageCore *p);
   void visitAnExtension(AnExtension *p);
   void visitDeclFun(DeclFun *p);
+  void visitDeclFunGeneric(DeclFunGeneric *p);
   void visitDeclTypeAlias(DeclTypeAlias *p);
   void visitDeclExceptionType(DeclExceptionType *p);
   void visitDeclExceptionVariant(DeclExceptionVariant *p);
@@ -74,6 +75,7 @@ public:
   void visitIf(If *p);
   void visitLet(Let *p);
   void visitLetRec(LetRec *p);
+  void visitTypeAbstraction(TypeAbstraction *p);
   void visitAPatternBinding(APatternBinding *p);
   void visitLessThan(LessThan *p);
   void visitLessThanOrEqual(LessThanOrEqual *p);
@@ -96,6 +98,7 @@ public:
   void visitRef(Ref *p);
   void visitDeref(Deref *p);
   void visitApplication(Application *p);
+  void visitTypeApplication(TypeApplication *p);
   void visitDotRecord(DotRecord *p);
   void visitDotTuple(DotTuple *p);
   void visitTuple(Tuple *p);
@@ -125,6 +128,7 @@ public:
   void visitConstMemory(ConstMemory *p);
   void visitVar(Var *p);
   void visitTypeFun(TypeFun *p);
+  void visitTypeForAll(TypeForAll *p);
   void visitTypeRec(TypeRec *p);
   void visitTypeSum(TypeSum *p);
   void visitTypeTuple(TypeTuple *p);

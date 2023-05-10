@@ -123,7 +123,7 @@ extern int yylex(YYSTYPE *lvalp, YYLTYPE *llocp, yyscan_t scanner);
 %token          _SEMI            /* ; */
 %token          _LT              /* < */
 %token          _LDARROW         /* <= */
-%token          _SYMB_11         /* <| */
+%token          _SYMB_13         /* <| */
 %token          _EQ              /* = */
 %token          _DEQ             /* == */
 %token          _RDARROW         /* => */
@@ -155,6 +155,8 @@ extern int yylex(YYSTYPE *lvalp, YYLTYPE *llocp, yyscan_t scanner);
 %token          _KW_fix          /* fix */
 %token          _KW_fn           /* fn */
 %token          _KW_fold         /* fold */
+%token          _KW_forall       /* forall */
+%token          _KW_generic      /* generic */
 %token          _KW_if           /* if */
 %token          _KW_in           /* in */
 %token          _KW_inl          /* inl */
@@ -182,9 +184,9 @@ extern int yylex(YYSTYPE *lvalp, YYLTYPE *llocp, yyscan_t scanner);
 %token          _KW_with         /* with */
 %token          _LBRACE          /* { */
 %token          _BAR             /* | */
-%token          _SYMB_12         /* |> */
+%token          _SYMB_14         /* |> */
 %token          _RBRACE          /* } */
-%token          _KW_77           /* µ */
+%token          _KW_79           /* µ */
 %token<_string> T_ExtensionName  /* ExtensionName */
 %token<_string> T_MemoryAddress  /* MemoryAddress */
 %token<_string> T_StellaIdent    /* StellaIdent */
@@ -264,6 +266,7 @@ ListExtension : /* empty */ { $$ = new Stella::ListExtension(); result->listexte
   | ListExtension Extension _SEMI { $1->push_back($2); $$ = $1; result->listextension_ = $$; }
 ;
 Decl : ListAnnotation _KW_fn T_StellaIdent _LPAREN ListParamDecl _RPAREN ReturnType ThrowType _LBRACE ListDecl _KW_return Expr _RBRACE { std::reverse($5->begin(),$5->end()) ;$$ = new Stella::DeclFun($1, $3, $5, $7, $8, $10, $12); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->decl_ = $$; }
+  | ListAnnotation _KW_generic _KW_fn T_StellaIdent _LBRACK ListStellaIdent _RBRACK _LPAREN ListParamDecl _RPAREN ReturnType ThrowType _LBRACE ListDecl _KW_return Expr _RBRACE { std::reverse($6->begin(),$6->end()) ; std::reverse($9->begin(),$9->end()) ;$$ = new Stella::DeclFunGeneric($1, $4, $6, $9, $11, $12, $14, $16); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->decl_ = $$; }
   | _KW_type T_StellaIdent _EQ Type { $$ = new Stella::DeclTypeAlias($2, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->decl_ = $$; }
   | _KW_exception _KW_type _EQ Type { $$ = new Stella::DeclExceptionType($4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->decl_ = $$; }
   | _KW_exception _KW_variant T_StellaIdent _COLON Type { $$ = new Stella::DeclExceptionVariant($3, $5); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->decl_ = $$; }
@@ -313,7 +316,7 @@ PatternData : /* empty */ { $$ = new Stella::NoPatternData(); $$->line_number = 
 ExprData : /* empty */ { $$ = new Stella::NoExprData(); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->exprdata_ = $$; }
   | _EQ Expr { $$ = new Stella::SomeExprData($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->exprdata_ = $$; }
 ;
-Pattern : _SYMB_11 T_StellaIdent PatternData _SYMB_12 { $$ = new Stella::PatternVariant($2, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->pattern_ = $$; }
+Pattern : _SYMB_13 T_StellaIdent PatternData _SYMB_14 { $$ = new Stella::PatternVariant($2, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->pattern_ = $$; }
   | _KW_inl _LPAREN Pattern _RPAREN { $$ = new Stella::PatternInl($3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->pattern_ = $$; }
   | _KW_inr _LPAREN Pattern _RPAREN { $$ = new Stella::PatternInr($3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->pattern_ = $$; }
   | _LBRACE ListPattern _RBRACE { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::PatternTuple($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->pattern_ = $$; }
@@ -346,6 +349,7 @@ Expr : Expr1 _SEMI Expr { $$ = new Stella::Sequence($1, $3); $$->line_number = @
   | Expr1 _SEMI { $$ = $1; $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | _KW_let ListPatternBinding _KW_in Expr { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::Let($2, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | _KW_letrec ListPatternBinding _KW_in Expr { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::LetRec($2, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
+  | _KW_generic _LBRACK ListStellaIdent _RBRACK Expr { std::reverse($3->begin(),$3->end()) ;$$ = new Stella::TypeAbstraction($3, $5); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | Expr1 { $$ = $1; $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
 ;
 ListExpr : /* empty */ { $$ = new Stella::ListExpr(); result->listexpr_ = $$; }
@@ -375,7 +379,7 @@ ListExpr2 : Expr2 _SEMI { $$ = new Stella::ListExpr(); $$->push_back($1); result
 Expr3 : Expr3 _KW_as Type2 { $$ = new Stella::TypeAsc($1, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | Expr3 _KW_cast _KW_as Type2 { $$ = new Stella::TypeCast($1, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | _KW_fn _LPAREN ListParamDecl _RPAREN _LBRACE _KW_return Expr _RBRACE { std::reverse($3->begin(),$3->end()) ;$$ = new Stella::Abstraction($3, $7); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
-  | _SYMB_11 T_StellaIdent ExprData _SYMB_12 { $$ = new Stella::Variant($2, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
+  | _SYMB_13 T_StellaIdent ExprData _SYMB_14 { $$ = new Stella::Variant($2, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | _KW_match Expr2 _LBRACE ListMatchCase _RBRACE { std::reverse($4->begin(),$4->end()) ;$$ = new Stella::Match($2, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | _LBRACK ListExpr _RBRACK { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::List($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | Expr3 _PLUS Expr4 { $$ = new Stella::Add($1, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
@@ -393,6 +397,7 @@ Expr5 : _KW_new _LPAREN Expr5 _RPAREN { $$ = new Stella::Ref($3); $$->line_numbe
   | Expr6 { $$ = $1; $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
 ;
 Expr6 : Expr6 _LPAREN ListExpr _RPAREN { std::reverse($3->begin(),$3->end()) ;$$ = new Stella::Application($1, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
+  | Expr6 _LBRACK ListType _RBRACK { std::reverse($3->begin(),$3->end()) ;$$ = new Stella::TypeApplication($1, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | Expr6 _DOT T_StellaIdent { $$ = new Stella::DotRecord($1, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | Expr6 _DOT _INTEGER_ { $$ = new Stella::DotTuple($1, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
   | _LBRACE ListExpr _RBRACE { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::Tuple($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
@@ -426,7 +431,8 @@ Expr7 : _KW_true { $$ = new Stella::ConstTrue(); $$->line_number = @$.first_line
   | _LPAREN Expr _RPAREN { $$ = $2; $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->expr_ = $$; }
 ;
 Type : _KW_fn _LPAREN ListType _RPAREN _RARROW Type { std::reverse($3->begin(),$3->end()) ;$$ = new Stella::TypeFun($3, $6); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
-  | _KW_77 T_StellaIdent _DOT Type { $$ = new Stella::TypeRec($2, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
+  | _KW_forall ListStellaIdent _DOT Type { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::TypeForAll($2, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
+  | _KW_79 T_StellaIdent _DOT Type { $$ = new Stella::TypeRec($2, $4); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
   | Type1 { $$ = $1; $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
 ;
 Type1 : Type2 _PLUS Type2 { $$ = new Stella::TypeSum($1, $3); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
@@ -434,7 +440,7 @@ Type1 : Type2 _PLUS Type2 { $$ = new Stella::TypeSum($1, $3); $$->line_number = 
 ;
 Type2 : _LBRACE ListType _RBRACE { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::TypeTuple($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
   | _LBRACE ListRecordFieldType _RBRACE { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::TypeRecord($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
-  | _SYMB_11 ListVariantFieldType _SYMB_12 { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::TypeVariant($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
+  | _SYMB_13 ListVariantFieldType _SYMB_14 { std::reverse($2->begin(),$2->end()) ;$$ = new Stella::TypeVariant($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
   | _LBRACK Type _RBRACK { $$ = new Stella::TypeList($2); $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
   | Type3 { $$ = $1; $$->line_number = @$.first_line; $$->char_number = @$.first_column; result->type_ = $$; }
 ;

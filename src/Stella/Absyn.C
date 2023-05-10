@@ -210,6 +210,77 @@ DeclFun *DeclFun::clone() const
 
 
 
+/********************   DeclFunGeneric    ********************/
+DeclFunGeneric::DeclFunGeneric(ListAnnotation *p1, StellaIdent p2, ListStellaIdent *p3, ListParamDecl *p4, ReturnType *p5, ThrowType *p6, ListDecl *p7, Expr *p8)
+{
+  listannotation_ = p1;
+  stellaident_ = p2;
+  liststellaident_ = p3;
+  listparamdecl_ = p4;
+  returntype_ = p5;
+  throwtype_ = p6;
+  listdecl_ = p7;
+  expr_ = p8;
+
+}
+
+DeclFunGeneric::DeclFunGeneric(const DeclFunGeneric & other)
+{
+  listannotation_ = other.listannotation_->clone();
+  stellaident_ = other.stellaident_;
+  liststellaident_ = other.liststellaident_->clone();
+  listparamdecl_ = other.listparamdecl_->clone();
+  returntype_ = other.returntype_->clone();
+  throwtype_ = other.throwtype_->clone();
+  listdecl_ = other.listdecl_->clone();
+  expr_ = other.expr_->clone();
+
+}
+
+DeclFunGeneric &DeclFunGeneric::operator=(const DeclFunGeneric & other)
+{
+  DeclFunGeneric tmp(other);
+  swap(tmp);
+  return *this;
+}
+
+void DeclFunGeneric::swap(DeclFunGeneric & other)
+{
+  std::swap(listannotation_, other.listannotation_);
+  std::swap(stellaident_, other.stellaident_);
+  std::swap(liststellaident_, other.liststellaident_);
+  std::swap(listparamdecl_, other.listparamdecl_);
+  std::swap(returntype_, other.returntype_);
+  std::swap(throwtype_, other.throwtype_);
+  std::swap(listdecl_, other.listdecl_);
+  std::swap(expr_, other.expr_);
+
+}
+
+DeclFunGeneric::~DeclFunGeneric()
+{
+  delete(listannotation_);
+  delete(liststellaident_);
+  delete(listparamdecl_);
+  delete(returntype_);
+  delete(throwtype_);
+  delete(listdecl_);
+  delete(expr_);
+
+}
+
+void DeclFunGeneric::accept(Visitor *v)
+{
+  v->visitDeclFunGeneric(this);
+}
+
+DeclFunGeneric *DeclFunGeneric::clone() const
+{
+  return new DeclFunGeneric(*this);
+}
+
+
+
 /********************   DeclTypeAlias    ********************/
 DeclTypeAlias::DeclTypeAlias(StellaIdent p1, Type *p2)
 {
@@ -691,6 +762,54 @@ void TypeFun::accept(Visitor *v)
 TypeFun *TypeFun::clone() const
 {
   return new TypeFun(*this);
+}
+
+
+
+/********************   TypeForAll    ********************/
+TypeForAll::TypeForAll(ListStellaIdent *p1, Type *p2)
+{
+  liststellaident_ = p1;
+  type_ = p2;
+
+}
+
+TypeForAll::TypeForAll(const TypeForAll & other)
+{
+  liststellaident_ = other.liststellaident_->clone();
+  type_ = other.type_->clone();
+
+}
+
+TypeForAll &TypeForAll::operator=(const TypeForAll & other)
+{
+  TypeForAll tmp(other);
+  swap(tmp);
+  return *this;
+}
+
+void TypeForAll::swap(TypeForAll & other)
+{
+  std::swap(liststellaident_, other.liststellaident_);
+  std::swap(type_, other.type_);
+
+}
+
+TypeForAll::~TypeForAll()
+{
+  delete(liststellaident_);
+  delete(type_);
+
+}
+
+void TypeForAll::accept(Visitor *v)
+{
+  v->visitTypeForAll(this);
+}
+
+TypeForAll *TypeForAll::clone() const
+{
+  return new TypeForAll(*this);
 }
 
 
@@ -2456,6 +2575,54 @@ LetRec *LetRec::clone() const
 
 
 
+/********************   TypeAbstraction    ********************/
+TypeAbstraction::TypeAbstraction(ListStellaIdent *p1, Expr *p2)
+{
+  liststellaident_ = p1;
+  expr_ = p2;
+
+}
+
+TypeAbstraction::TypeAbstraction(const TypeAbstraction & other)
+{
+  liststellaident_ = other.liststellaident_->clone();
+  expr_ = other.expr_->clone();
+
+}
+
+TypeAbstraction &TypeAbstraction::operator=(const TypeAbstraction & other)
+{
+  TypeAbstraction tmp(other);
+  swap(tmp);
+  return *this;
+}
+
+void TypeAbstraction::swap(TypeAbstraction & other)
+{
+  std::swap(liststellaident_, other.liststellaident_);
+  std::swap(expr_, other.expr_);
+
+}
+
+TypeAbstraction::~TypeAbstraction()
+{
+  delete(liststellaident_);
+  delete(expr_);
+
+}
+
+void TypeAbstraction::accept(Visitor *v)
+{
+  v->visitTypeAbstraction(this);
+}
+
+TypeAbstraction *TypeAbstraction::clone() const
+{
+  return new TypeAbstraction(*this);
+}
+
+
+
 /********************   LessThan    ********************/
 LessThan::LessThan(Expr *p1, Expr *p2)
 {
@@ -3447,6 +3614,54 @@ void Application::accept(Visitor *v)
 Application *Application::clone() const
 {
   return new Application(*this);
+}
+
+
+
+/********************   TypeApplication    ********************/
+TypeApplication::TypeApplication(Expr *p1, ListType *p2)
+{
+  expr_ = p1;
+  listtype_ = p2;
+
+}
+
+TypeApplication::TypeApplication(const TypeApplication & other)
+{
+  expr_ = other.expr_->clone();
+  listtype_ = other.listtype_->clone();
+
+}
+
+TypeApplication &TypeApplication::operator=(const TypeApplication & other)
+{
+  TypeApplication tmp(other);
+  swap(tmp);
+  return *this;
+}
+
+void TypeApplication::swap(TypeApplication & other)
+{
+  std::swap(expr_, other.expr_);
+  std::swap(listtype_, other.listtype_);
+
+}
+
+TypeApplication::~TypeApplication()
+{
+  delete(expr_);
+  delete(listtype_);
+
+}
+
+void TypeApplication::accept(Visitor *v)
+{
+  v->visitTypeApplication(this);
+}
+
+TypeApplication *TypeApplication::clone() const
+{
+  return new TypeApplication(*this);
 }
 
 

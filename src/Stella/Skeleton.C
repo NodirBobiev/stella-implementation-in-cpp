@@ -73,6 +73,21 @@ void Skeleton::visitDeclFun(DeclFun *decl_fun)
 
 }
 
+void Skeleton::visitDeclFunGeneric(DeclFunGeneric *decl_fun_generic)
+{
+  /* Code For DeclFunGeneric Goes Here */
+
+  if (decl_fun_generic->listannotation_) decl_fun_generic->listannotation_->accept(this);
+  visitStellaIdent(decl_fun_generic->stellaident_);
+  if (decl_fun_generic->liststellaident_) decl_fun_generic->liststellaident_->accept(this);
+  if (decl_fun_generic->listparamdecl_) decl_fun_generic->listparamdecl_->accept(this);
+  if (decl_fun_generic->returntype_) decl_fun_generic->returntype_->accept(this);
+  if (decl_fun_generic->throwtype_) decl_fun_generic->throwtype_->accept(this);
+  if (decl_fun_generic->listdecl_) decl_fun_generic->listdecl_->accept(this);
+  if (decl_fun_generic->expr_) decl_fun_generic->expr_->accept(this);
+
+}
+
 void Skeleton::visitDeclTypeAlias(DeclTypeAlias *decl_type_alias)
 {
   /* Code For DeclTypeAlias Goes Here */
@@ -159,6 +174,15 @@ void Skeleton::visitTypeFun(TypeFun *type_fun)
 
   if (type_fun->listtype_) type_fun->listtype_->accept(this);
   if (type_fun->type_) type_fun->type_->accept(this);
+
+}
+
+void Skeleton::visitTypeForAll(TypeForAll *type_for_all)
+{
+  /* Code For TypeForAll Goes Here */
+
+  if (type_for_all->liststellaident_) type_for_all->liststellaident_->accept(this);
+  if (type_for_all->type_) type_for_all->type_->accept(this);
 
 }
 
@@ -484,6 +508,15 @@ void Skeleton::visitLetRec(LetRec *let_rec)
 
 }
 
+void Skeleton::visitTypeAbstraction(TypeAbstraction *type_abstraction)
+{
+  /* Code For TypeAbstraction Goes Here */
+
+  if (type_abstraction->liststellaident_) type_abstraction->liststellaident_->accept(this);
+  if (type_abstraction->expr_) type_abstraction->expr_->accept(this);
+
+}
+
 void Skeleton::visitLessThan(LessThan *less_than)
 {
   /* Code For LessThan Goes Here */
@@ -667,6 +700,15 @@ void Skeleton::visitApplication(Application *application)
 
   if (application->expr_) application->expr_->accept(this);
   if (application->listexpr_) application->listexpr_->accept(this);
+
+}
+
+void Skeleton::visitTypeApplication(TypeApplication *type_application)
+{
+  /* Code For TypeApplication Goes Here */
+
+  if (type_application->expr_) type_application->expr_->accept(this);
+  if (type_application->listtype_) type_application->listtype_->accept(this);
 
 }
 

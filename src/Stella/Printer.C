@@ -254,6 +254,33 @@ void PrintAbsyn::visitDeclFun(DeclFun *p)
   _i_ = oldi;
 }
 
+void PrintAbsyn::visitDeclFunGeneric(DeclFunGeneric *p)
+{
+  int oldi = _i_;
+  if (oldi > 0) render(STELLA__L_PAREN);
+
+  _i_ = 0; visitListAnnotation(p->listannotation_);
+  render("generic");
+  render("fn");
+  visitStellaIdent(p->stellaident_);
+  render('[');
+  _i_ = 0; visitListStellaIdent(p->liststellaident_);
+  render(']');
+  render('(');
+  _i_ = 0; visitListParamDecl(p->listparamdecl_);
+  render(')');
+  _i_ = 0; p->returntype_->accept(this);
+  _i_ = 0; p->throwtype_->accept(this);
+  render('{');
+  _i_ = 0; visitListDecl(p->listdecl_);
+  render("return");
+  _i_ = 0; p->expr_->accept(this);
+  render('}');
+
+  if (oldi > 0) render(STELLA__R_PAREN);
+  _i_ = oldi;
+}
+
 void PrintAbsyn::visitDeclTypeAlias(DeclTypeAlias *p)
 {
   int oldi = _i_;
@@ -455,6 +482,20 @@ void PrintAbsyn::visitTypeFun(TypeFun *p)
   _i_ = 0; visitListType(p->listtype_);
   render(')');
   render("->");
+  _i_ = 0; p->type_->accept(this);
+
+  if (oldi > 0) render(STELLA__R_PAREN);
+  _i_ = oldi;
+}
+
+void PrintAbsyn::visitTypeForAll(TypeForAll *p)
+{
+  int oldi = _i_;
+  if (oldi > 0) render(STELLA__L_PAREN);
+
+  render("forall");
+  _i_ = 0; visitListStellaIdent(p->liststellaident_);
+  render('.');
   _i_ = 0; p->type_->accept(this);
 
   if (oldi > 0) render(STELLA__R_PAREN);
@@ -1047,6 +1088,21 @@ void PrintAbsyn::visitLetRec(LetRec *p)
   _i_ = oldi;
 }
 
+void PrintAbsyn::visitTypeAbstraction(TypeAbstraction *p)
+{
+  int oldi = _i_;
+  if (oldi > 0) render(STELLA__L_PAREN);
+
+  render("generic");
+  render('[');
+  _i_ = 0; visitListStellaIdent(p->liststellaident_);
+  render(']');
+  _i_ = 0; p->expr_->accept(this);
+
+  if (oldi > 0) render(STELLA__R_PAREN);
+  _i_ = oldi;
+}
+
 void PrintAbsyn::visitAssign(Assign *p)
 {
   int oldi = _i_;
@@ -1354,6 +1410,20 @@ void PrintAbsyn::visitApplication(Application *p)
   render('(');
   _i_ = 0; visitListExpr(p->listexpr_);
   render(')');
+
+  if (oldi > 6) render(STELLA__R_PAREN);
+  _i_ = oldi;
+}
+
+void PrintAbsyn::visitTypeApplication(TypeApplication *p)
+{
+  int oldi = _i_;
+  if (oldi > 6) render(STELLA__L_PAREN);
+
+  _i_ = 6; p->expr_->accept(this);
+  render('[');
+  _i_ = 0; visitListType(p->listtype_);
+  render(']');
 
   if (oldi > 6) render(STELLA__R_PAREN);
   _i_ = oldi;
@@ -2056,6 +2126,43 @@ void ShowAbsyn::visitDeclFun(DeclFun *p)
   bufAppend(' ');
   bufAppend(')');
 }
+void ShowAbsyn::visitDeclFunGeneric(DeclFunGeneric *p)
+{
+  bufAppend('(');
+  bufAppend("DeclFunGeneric");
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->listannotation_)  p->listannotation_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  visitStellaIdent(p->stellaident_);
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->liststellaident_)  p->liststellaident_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->listparamdecl_)  p->listparamdecl_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->returntype_)  p->returntype_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->throwtype_)  p->throwtype_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->listdecl_)  p->listdecl_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->expr_)  p->expr_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend(')');
+}
 void ShowAbsyn::visitDeclTypeAlias(DeclTypeAlias *p)
 {
   bufAppend('(');
@@ -2199,6 +2306,20 @@ void ShowAbsyn::visitTypeFun(TypeFun *p)
   bufAppend(' ');
   bufAppend('[');
   if (p->listtype_)  p->listtype_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->type_)  p->type_->accept(this);
+  bufAppend(']');
+  bufAppend(')');
+}
+void ShowAbsyn::visitTypeForAll(TypeForAll *p)
+{
+  bufAppend('(');
+  bufAppend("TypeForAll");
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->liststellaident_)  p->liststellaident_->accept(this);
   bufAppend(']');
   bufAppend(' ');
   bufAppend('[');
@@ -2607,6 +2728,20 @@ void ShowAbsyn::visitLetRec(LetRec *p)
   bufAppend(']');
   bufAppend(')');
 }
+void ShowAbsyn::visitTypeAbstraction(TypeAbstraction *p)
+{
+  bufAppend('(');
+  bufAppend("TypeAbstraction");
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->liststellaident_)  p->liststellaident_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->expr_)  p->expr_->accept(this);
+  bufAppend(']');
+  bufAppend(')');
+}
 void ShowAbsyn::visitAssign(Assign *p)
 {
   bufAppend('(');
@@ -2863,6 +2998,21 @@ void ShowAbsyn::visitApplication(Application *p)
   bufAppend(' ');
   bufAppend('[');
   if (p->listexpr_)  p->listexpr_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend(')');
+}
+void ShowAbsyn::visitTypeApplication(TypeApplication *p)
+{
+  bufAppend('(');
+  bufAppend("TypeApplication");
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->expr_)  p->expr_->accept(this);
+  bufAppend(']');
+  bufAppend(' ');
+  bufAppend('[');
+  if (p->listtype_)  p->listtype_->accept(this);
   bufAppend(']');
   bufAppend(' ');
   bufAppend(')');

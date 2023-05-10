@@ -18,6 +18,7 @@ separator ExtensionName "," ;
 terminator Extension ";" ;
 
 DeclFun.    Decl ::= [Annotation] "fn" StellaIdent "(" [ParamDecl] ")" ReturnType ThrowType "{" [Decl] "return" Expr "}" ;
+DeclFunGeneric. Decl ::= [Annotation] "generic" "fn" StellaIdent "[" [StellaIdent] "]" "(" [ParamDecl] ")" ReturnType ThrowType "{" [Decl] "return" Expr "}" ;
 DeclTypeAlias.  Decl ::= "type" StellaIdent "=" Type ;
 DeclExceptionType. Decl ::= "exception" "type" "=" Type ;
 DeclExceptionVariant. Decl ::= "exception" "variant" StellaIdent ":" Type ;
@@ -84,6 +85,7 @@ Assign.       Expr1 ::= Expr2 ":=" Expr1;
 If.           Expr1 ::= "if" Expr1 "then" Expr1 "else" Expr1 ;
 Let.          Expr ::= "let" [PatternBinding] "in" Expr ;
 LetRec.       Expr ::= "letrec" [PatternBinding] "in" Expr ;
+TypeAbstraction.  Expr ::= "generic" "[" [StellaIdent] "]" Expr ;
 
 APatternBinding. PatternBinding ::= Pattern "=" Expr ;
 separator nonempty PatternBinding "," ;
@@ -114,6 +116,7 @@ Ref.          Expr5 ::= "new" "(" Expr5 ")" ;
 Deref.        Expr5 ::= "*" Expr5 ;
 
 Application.  Expr6 ::= Expr6 "(" [Expr] ")" ;
+TypeApplication.  Expr6 ::= Expr6 "[" [Type] "]" ;
 
 DotRecord.    Expr6 ::= Expr6 "." StellaIdent ;
 DotTuple.     Expr6 ::= Expr6 "." Integer ;
@@ -150,6 +153,7 @@ ConstMemory.  Expr7 ::= MemoryAddress ;
 Var.          Expr7 ::= StellaIdent ;
 
 TypeFun.      Type ::= "fn" "(" [Type] ")" "->" Type ;
+TypeForAll.   Type ::= "forall" [StellaIdent] "." Type ;
 TypeRec.      Type ::= "µ" StellaIdent "." Type ;
 TypeSum.      Type1 ::= Type2 "+" Type2;
 TypeTuple.    Type2 ::= "{" [Type] "}" ;
